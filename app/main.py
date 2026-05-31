@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 
-app = FastAPI(title="Notification Service (Technical Test)")
+from routers.requests import requests_router
+from settings import settings
 
+app = FastAPI(
+    title=settings.app_name, version=settings.app_version, debug=settings.debug
+)
 
-@app.get("/")
-def hello_world():
-    return {"hello": "world"}
+app.include_router(requests_router, prefix="/v1")
