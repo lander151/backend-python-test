@@ -6,6 +6,7 @@ from constants import STATUS_FAILED, STATUS_SENT, STATUS_PROCESSING, STATUS_QUEU
 from database import save_notification, get_notification, update_notification_status
 from models import NotificationRequest, NotificationResponse, NotificationStatus
 from provider import send_notification_to_provider
+
 from settings import settings
 
 MAX_RETRIES = settings.max_retries
@@ -34,7 +35,14 @@ async def create_request(data: NotificationRequest):
 
 
 @requests_router.post(
-    "/requests/{request_id}/process", status_code=status.HTTP_202_ACCEPTED
+    "/requests/{request_id}/process",
+    status_code=status.HTTP_202_ACCEPTED,
+    responses={
+        202: {"description": "Notificación en proceso"},
+        404: {
+            "description": "Not found",
+        },
+    },
 )
 async def process_request(request_id: str, background_tasks: BackgroundTasks):
     """Procesamiento de Envío: POST /v1/requests/{id}/process"""
@@ -69,7 +77,16 @@ async def call_provider(request_id: str, notification: NotificationRequest) -> d
     return {"success": False, "error": "Max retries exceeded"}
 
 
-@requests_router.get("/requests/{request_id}", status_code=status.HTTP_200_OK)
+@requests_router.get(
+    "/requests/{request_id}",
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {"model": NotificationStatus},
+        404: {
+            "description": "Not found",
+        },
+    },
+)
 async def get_request_status(request_id: str):
     """
     Consulta de Estado: GET /v1/requests/{id}
