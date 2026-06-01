@@ -70,9 +70,11 @@ async def call_provider(request_id: str, notification: NotificationRequest) -> d
             new_status = STATUS_SENT if result["success"] else STATUS_FAILED
 
             await update_notification_status(request_id, new_status)
+            return {"success": result["success"], "status": new_status}
 
         except Exception:
-            await asyncio.sleep(RETRY_BACKOFF**attempt)
+            if attempt < MAX_RETRIES - 1:
+                await asyncio.sleep(RETRY_BACKOFF**attempt)
 
     return {"success": False, "error": "Max retries exceeded"}
 
